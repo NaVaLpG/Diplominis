@@ -5,5 +5,8 @@
 <p>Game: {{ tournament.game.name }}</p>
 <p>Created_by: {{ tournament.created_by }}</p>
 <p>Start: {{ tournament.start_date }}</p>
-<a href="{% url 'tournament_list' %}">Back to tournament list</a>
+{% if user.is_authenticated %}
+<p>authenticated</p>
+{% endif %}
+<a href="{% url 'tournament-list' %}">Back to tournament list</a>
 {% endblock %}

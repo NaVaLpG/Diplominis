@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class Profile(models.Model):
-    profile_picture = models.ImageField(upload_to="profile_pics", blank=True, default="pfp.png")
+    profile_picture = models.ImageField(upload_to="profile_pics", default="pfp.png")
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     creation_date = models.DateTimeField(auto_now_add=True, blank=True)
 
@@ -60,4 +60,4 @@ class TournamentParticipant(models.Model):
         unique_together = ('profile', 'tournament')
 
     def __str__(self):
-        return f"{self.profile.nickname} - {self.tournament.name}"
+        return f"{self.profile} - {self.tournament.name}"

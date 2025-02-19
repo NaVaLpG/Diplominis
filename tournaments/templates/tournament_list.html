@@ -4,8 +4,8 @@
 <h2>Tournaments</h2>
 <ul>
     {% for tournament in tournaments %}
-        <li><a href="{% url 'tournament_detail' tournament.id %}">{{ tournament.name }}</a></li>
+        <li><a href="{% url 'tournament-detail' tournament.id %}">{{ tournament.name }}</a></li>
     {% endfor %}
 </ul>
-<a href="{% url 'tournament_create' %}">Create tournament</a>
+<a href="{% url 'tournament-create' %}">Create tournament</a>
 {% endblock %}

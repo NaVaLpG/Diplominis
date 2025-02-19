@@ -7,8 +7,8 @@ urlpatterns = [
     path("register/", views.register_user, name="register"),
     path("games/", views.GameListView.as_view(), name="game-all"),
     path("games/<int:pk>", views.GameDetailView.as_view(), name="game-one"),
-    path("tournaments/", views.TournamentListView.as_view(), name="tournament_list"),
-    path("tournaments/<int:pk>/", views.TournamentDetailView.as_view(), name="tournament_detail"),
-    path("tournaments/create/", views.TournamentCreateView.as_view(), name="tournament_create"),
+    path("tournaments/", views.TournamentListView.as_view(), name="tournament-list"),
+    path("tournaments/<int:pk>/", views.TournamentDetailView.as_view(), name="tournament-detail"),
+    path("tournaments/create/", views.TournamentCreateView.as_view(), name="tournament-create"),
 
 ]

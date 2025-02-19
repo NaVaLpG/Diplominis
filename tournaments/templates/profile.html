@@ -1,12 +1,8 @@
 
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>GTProfile</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
 {% load crispy_forms_tags %}
 <div>
     <img class="rounded-circle" src="{{ user.profile.profile_picture.url }}" />
@@ -23,5 +19,4 @@
         </div>
     </form>
 </div>
-</body>
-</html>
+{% endblock %}
