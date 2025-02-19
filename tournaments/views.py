@@ -92,6 +92,35 @@ class TournamentDetailView(generic.DetailView):
     model = Tournament
     template_name = "tournament_detail.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tournament = self.object  # Gauname turnyro objektą
+
+        # Patikriname, ar vartotojas dalyvauja turnyre
+        user_participates = tournament.tournamentparticipant_set.filter(profile__user=self.request.user).exists()
+        context['user_participates'] = user_participates
+
+        return context
+
+
+@login_required
+def join_tournament(request, tournament_id):
+    tournament = Tournament.objects.get(id=tournament_id)
+    profile = Profile.objects.get(user=request.user)
+
+    # Sukuriame dalyvį, jei jis dar neužsiregistravo
+    TournamentParticipant.objects.get_or_create(profile=profile, tournament=tournament)
+    return redirect('tournament-detail', pk=tournament.id)
+
+@login_required
+def leave_tournament(request, tournament_id):
+    tournament = Tournament.objects.get(id=tournament_id)
+    profile = Profile.objects.get(user=request.user)
+
+    # Ištriname vartotoją iš dalyvių sąrašo
+    TournamentParticipant.objects.filter(profile=profile, tournament=tournament).delete()
+    return redirect('tournament-detail', pk=tournament.id)
+
 
 # Sukurti naują turnyrą (tik prisijungusiems vartotojams)
 class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
