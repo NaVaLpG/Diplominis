@@ -97,8 +97,8 @@ class TournamentDetailView(generic.DetailView):
 class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
     model = Tournament
     template_name = "tournament_form.html"
-    fields = ["name", "game"]
-    success_url = "tournaments/"
+    fields = ["name", "game", "start_date"]
+    success_url = "/tournaments/tournaments/"
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user

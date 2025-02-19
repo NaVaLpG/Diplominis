@@ -113,7 +113,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-LOGIN_REDIRECT_URL = '/tournaments'
+LOGIN_REDIRECT_URL = '/tournaments/'
 LOGOUT_REDIRECT_URL = '/tournaments/'
 
 # Default primary key field type

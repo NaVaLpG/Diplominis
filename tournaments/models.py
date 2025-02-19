@@ -8,17 +8,12 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     profile_picture = models.ImageField(upload_to="profile_pics", blank=True, default="pfp.png")
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nickname = models.CharField("Nickname", max_length=17)
     creation_date = models.DateTimeField(auto_now_add=True, blank=True)
 
     def __str__(self):
-        return self.nickname
+        return self.user.username
 
     def save(self, *args, **kwargs):
-        """
-        Pradzioje leidziam padaryti issaugojimo veiksma,
-        po to su fill biblioteka modifikuojam issaugoto pav. dydi
-        """
         super().save(*args, **kwargs)  # numatytieji Model klases veiksmai suvykdomi
         if self.profile_picture.path:
             img = Image.open(self.profile_picture.path)

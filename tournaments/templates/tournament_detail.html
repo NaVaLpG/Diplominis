@@ -2,8 +2,8 @@
 
 {% block content %}
 <h2>{{ tournament.name }}</h2>
-<p>Žaidimas: {{ tournament.game.name }}</p>
-<p>Sukūrė: {{ tournament.created_by }}</p>
-<p>Data: {{ tournament.created_at }}</p>
-<a href="{% url 'tournament_list' %}">Grįžti į sąrašą</a>
+<p>Game: {{ tournament.game.name }}</p>
+<p>Created_by: {{ tournament.created_by }}</p>
+<p>Start: {{ tournament.start_date }}</p>
+<a href="{% url 'tournament_list' %}">Back to tournament list</a>
 {% endblock %}
