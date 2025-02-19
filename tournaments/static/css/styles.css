@@ -1,0 +1,19 @@
+body {
+    background-color: #97add1;
+
+.sidebar-nav {
+  list-style: none;
+  margin-top: 10px;
+  }
+}
+.card {
+    min-height: 600px;
+    width: 100%;
+}
+.card-body{
+    height: 25%;
+}
+.card img{
+    height: 75%;
+    object-fit: contain;
+}
