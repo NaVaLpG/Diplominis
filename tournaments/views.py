@@ -110,7 +110,7 @@ class TournamentDetailView(generic.DetailView):
             user_participates = tournament.tournamentparticipant_set.filter(profile__user=self.request.user).exists()
             context['user_participates'] = user_participates
 
-            if self.request.user == tournament.created_by:
+            if self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists():
                 context['status_form'] = TournamentStatusUpdateForm(instance=tournament)
 
         return context
@@ -122,10 +122,6 @@ class TournamentDetailView(generic.DetailView):
         form = TournamentStatusUpdateForm(request.POST, instance=tournament)
         if form.is_valid():
             form.save()
-            messages.success(request, "Tournament status updated!")
-        else:
-            messages.error(request, "Invalid input.")
-
         return redirect('tournament-detail', pk=tournament.pk)
 
 
