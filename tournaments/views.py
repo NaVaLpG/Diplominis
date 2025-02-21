@@ -1,14 +1,16 @@
+from lib2to3.fixes.fix_input import context
+
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.views import generic
-from django.db.models import Q  # Q - kombinuoti keletą filtravimo sąlygų su OR
-from django.core.paginator import Paginator  # funkcijų puslapiavimui
+from django.db.models import Q
+from django.core.paginator import Paginator
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
 
-from .forms import UserUpdateForm, ProfleUpdateForm
-from .models import User, Profile, Game, Tournament, TournamentParticipant
+from .forms import UserUpdateForm, ProfleUpdateForm, TournamentStatusUpdateForm
+from .models import User, Profile, Game, Tournament, TournamentParticipant, FavouriteGame
 
 
 def index(request):
@@ -18,6 +20,7 @@ def index(request):
 @login_required()
 @csrf_protect
 def get_user_profile(request):
+    profile = get_object_or_404(Profile, user=request.user)
     if request.method == "POST":
         p_form = ProfleUpdateForm(request.POST, request.FILES, instance=request.user.profile)
         u_form = UserUpdateForm(request.POST, instance=request.user)
@@ -27,7 +30,7 @@ def get_user_profile(request):
             messages.info(request, "Profilis atnaujintas")
         else:
             messages.error(request, "Profilis neatnaujinas. Ivyko klaida")
-        return redirect("user-profile")
+        return redirect("user-profile", )
 
     if request.method == "GET":
         p_form = ProfleUpdateForm(instance=request.user.profile)
@@ -35,7 +38,8 @@ def get_user_profile(request):
 
         context = {
             "p_form": p_form,
-            "u_form": u_form
+            "u_form": u_form,
+            "profile": profile,
         }
     return render(request, "profile.html", context=context)
 
@@ -75,10 +79,15 @@ class GameListView(generic.ListView):
     paginate_by = 3
 
 
-class GameDetailView(generic.DetailView):
-    model = Game
-    context_object_name = "game"
-    template_name = "game.html"
+def game_detail_view(request, pk):
+    game = get_object_or_404(Game, id=pk)
+    is_favorite = False
+
+    if request.user.is_authenticated:
+        profile = get_object_or_404(Profile, user=request.user)
+        is_favorite = FavouriteGame.objects.filter(profile=profile, game=game).exists()
+
+    return render(request, "game.html", {"game": game, "is_favorite": is_favorite})
 
 
 class TournamentListView(generic.ListView):
@@ -97,10 +106,27 @@ class TournamentDetailView(generic.DetailView):
         tournament = self.object  # Gauname turnyro objektą
 
         # Patikriname, ar vartotojas dalyvauja turnyre
-        user_participates = tournament.tournamentparticipant_set.filter(profile__user=self.request.user).exists()
-        context['user_participates'] = user_participates
+        if self.request.user.is_authenticated:
+            user_participates = tournament.tournamentparticipant_set.filter(profile__user=self.request.user).exists()
+            context['user_participates'] = user_participates
+
+            if self.request.user == tournament.created_by:
+                context['status_form'] = TournamentStatusUpdateForm(instance=tournament)
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        """Handle the status update"""
+        tournament = self.get_object()
+
+        form = TournamentStatusUpdateForm(request.POST, instance=tournament)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Tournament status updated!")
+        else:
+            messages.error(request, "Invalid input.")
+
+        return redirect('tournament-detail', pk=tournament.pk)
 
 
 @login_required
@@ -108,16 +134,15 @@ def join_tournament(request, tournament_id):
     tournament = Tournament.objects.get(id=tournament_id)
     profile = Profile.objects.get(user=request.user)
 
-    # Sukuriame dalyvį, jei jis dar neužsiregistravo
     TournamentParticipant.objects.get_or_create(profile=profile, tournament=tournament)
     return redirect('tournament-detail', pk=tournament.id)
+
 
 @login_required
 def leave_tournament(request, tournament_id):
     tournament = Tournament.objects.get(id=tournament_id)
     profile = Profile.objects.get(user=request.user)
 
-    # Ištriname vartotoją iš dalyvių sąrašo
     TournamentParticipant.objects.filter(profile=profile, tournament=tournament).delete()
     return redirect('tournament-detail', pk=tournament.id)
 
@@ -132,3 +157,33 @@ class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
+
+
+@login_required
+def add_favorite_game(request, game_id):
+    """Allows a user to add a game to their favorites"""
+    game = get_object_or_404(Game, id=game_id)
+    profile = get_object_or_404(Profile, user=request.user)
+
+    # Check if the game is already in favorites
+    favorite, created = FavouriteGame.objects.get_or_create(profile=profile, game=game)
+
+    if created:
+        messages.success(request, f"{game.name} added to favorites!")
+    else:
+        messages.info(request, f"{game.name} is already in your favorites.")
+
+    return redirect('game-one', pk=game_id)
+
+
+@login_required
+def remove_favorite_game(request, game_id):
+    """Allows a user to remove a game from their favorites"""
+    game = get_object_or_404(Game, id=game_id)
+    profile = get_object_or_404(Profile, user=request.user)
+
+    # Delete the favorite if it exists
+    FavouriteGame.objects.filter(profile=profile, game=game).delete()
+    messages.success(request, f"{game.name} removed from favorites!")
+
+    return redirect('game-one', pk=game_id)

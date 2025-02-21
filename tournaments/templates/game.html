@@ -2,7 +2,11 @@
 
 {% block content %}
 <h1>{{ game.name }}</h1>
-<p></p>
-
-
+{% if user.is_authenticated %}
+    {% if is_favorite %}
+        <a href="{% url 'remove-favorite-game' game.id %}">Remove from Favorites</a>
+    {% else %}
+        <a href="{% url 'add-favorite-game' game.id %}">Add to Favorites</a>
+    {% endif %}
+{% endif %}
 {% endblock %}

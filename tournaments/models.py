@@ -39,7 +39,7 @@ class FavouriteGame(models.Model):
         unique_together = ('profile', 'game')
 
     def __str__(self):
-        return f"{self.profile.nickname} - {self.game.name}"
+        return f"{self.profile} - {self.game.name}"
 
 
 class Tournament(models.Model):
@@ -47,6 +47,13 @@ class Tournament(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     start_date = models.DateField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    STATUS_CHOICES = [
+        ('u', 'Upcoming'),
+        ('o', 'Ongoing'),
+        ('c', 'Completed'),
+    ]
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='u')
 
     def __str__(self):
         return self.name
@@ -59,5 +66,8 @@ class TournamentParticipant(models.Model):
     class Meta:
         unique_together = ('profile', 'tournament')
 
+
     def __str__(self):
         return f"{self.profile} - {self.tournament.name}"
+
+

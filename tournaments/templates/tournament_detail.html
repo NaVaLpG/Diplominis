@@ -6,9 +6,12 @@
 <p>Created_by: {{ tournament.created_by }}</p>
 <p>Start: {{ tournament.start_date }}</p>
 
-
-{% if user == tournament.created_by %}
-    <p>created by you</p>
+{% if user.is_authenticated and user == tournament.created_by %}
+    <form method="post">
+        {% csrf_token %}
+        {{ status_form.as_p }}
+        <button type="submit" class="btn btn-primary">Update Status</button>
+    </form>
 {% endif %}
 
 <a href="{% url 'tournament-list' %}">Back to tournament list</a>
@@ -17,20 +20,23 @@
     <p>{{ tournament_participant.profile }}</p>
 {% endfor %}
 
-{% if user_participates %}
-    <p>You are a participant in this tournament!</p>
-    <form action="{% url 'leave-tournament' tournament.id %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Leave Tournament</button>
-    </form>
-{% else %}
-    <p>You are not a participant in this tournament.</p>
-    <form action="{% url 'join-tournament' tournament.id %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Join Tournament</button>
-    </form>
+{% if tournament.status == 'u' %}
+    {% if user.is_authenticated %}
+        {% if user_participates %}
+            <p>You are a participant in this tournament!</p>
+            <form action="{% url 'leave-tournament' tournament.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Leave Tournament</button>
+            </form>
+        {% else %}
+            <p>You are not a participant in this tournament.</p>
+            <form action="{% url 'join-tournament' tournament.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Join Tournament</button>
+            </form>
+        {% endif %}
+    {% endif %}
 {% endif %}
-
 
 {% if user.is_authenticated %}
     <p>authenticated</p>
