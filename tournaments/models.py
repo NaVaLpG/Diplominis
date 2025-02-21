@@ -47,6 +47,10 @@ class Tournament(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     start_date = models.DateField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    upvotes = models.ManyToManyField(User, related_name="tournament_upvotes", blank=True)
+
+    def total_upvotes(self):
+        return self.upvotes.count()
 
     STATUS_CHOICES = [
         ('u', 'Upcoming'),

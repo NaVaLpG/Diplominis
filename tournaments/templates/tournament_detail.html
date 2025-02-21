@@ -16,9 +16,24 @@
 
 <a href="{% url 'tournament-list' %}">Back to tournament list</a>
 
+<p>Upvotes: {{ tournament.total_upvotes }}</p>
+
+{% if user.is_authenticated %}
+    <form action="{% url 'tournament-upvote' tournament.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn {% if user in tournament.upvotes.all %}btn-primary{% else %}btn-secondary{% endif %}">
+            {% if user in tournament.upvotes.all %}&#8593;{% else %}&#8593;{% endif %}
+        </button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> to upvote.</p>
+{% endif %}
+
 {% for tournament_participant in tournament.tournamentparticipant_set.all %}
     <p>{{ tournament_participant.profile }}</p>
 {% endfor %}
+
+
 
 {% if tournament.status == 'u' %}
     {% if user.is_authenticated %}
@@ -41,5 +56,7 @@
 {% if user.is_authenticated %}
     <p>authenticated</p>
 {% endif %}
+
+
 
 {% endblock %}

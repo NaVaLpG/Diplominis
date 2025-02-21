@@ -187,3 +187,15 @@ def remove_favorite_game(request, game_id):
     messages.success(request, f"{game.name} removed from favorites!")
 
     return redirect('game-one', pk=game_id)
+
+
+@login_required
+def upvote_tournament(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    if request.user in tournament.upvotes.all():
+        tournament.upvotes.remove(request.user)
+    else:
+        tournament.upvotes.add(request.user)
+
+    return redirect('tournament-detail', pk=tournament.id)
