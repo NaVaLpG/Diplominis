@@ -81,7 +81,7 @@ class GameListView(generic.ListView):
     model = Game
     context_object_name = "game_list"
     template_name = "games.html"
-    paginate_by = 3
+    paginate_by = 15
 
 
 def game_detail_view(request, pk):
@@ -203,6 +203,16 @@ class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="moderator").exists()
+
+
+class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    model = Game
+    template_name = "game_delete.html"
+    success_url = "/tournaments/games/"
+    context_object_name = "game"
 
     def test_func(self):
         return self.request.user.groups.filter(name="moderator").exists()

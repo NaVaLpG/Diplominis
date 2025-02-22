@@ -11,6 +11,7 @@
 <p>
 <a href="{% url 'game-one' game.id %}">{{ game.name }}</a>
 <a href="{% url 'game-update' game.id %}"><button>update</button></a>
+<a href="{% url 'game-delte' game.id %}"><button>delete</button></a>
 </p>
 
 {% endfor %}
