@@ -23,6 +23,7 @@ class Profile(models.Model):
 
 
 class Game(models.Model):
+    game_picture = models.ImageField(upload_to="game_pics", default="game.png")
     name = models.CharField("name", max_length=100)
     description = models.TextField()
     release_date = models.DateField()

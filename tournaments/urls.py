@@ -13,9 +13,13 @@ urlpatterns = [
     path("tournaments/create/", views.TournamentCreateView.as_view(), name="tournament-create"),
     path('tournaments/<int:tournament_id>/join/', views.join_tournament, name='join-tournament'),
     path('tournaments/<int:tournament_id>/leave/', views.leave_tournament, name='leave-tournament'),
-    path('game/<int:game_id>/add_favorite/', views.add_favorite_game, name='add-favorite-game'),
-    path('game/<int:game_id>/remove_favorite/', views.remove_favorite_game, name='remove-favorite-game'),
+    path('games/<int:game_id>/add_favorite/', views.add_favorite_game, name='add-favorite-game'),
+    path('games/<int:game_id>/remove_favorite/', views.remove_favorite_game, name='remove-favorite-game'),
     path("games/create/", views.GameCreateView.as_view(), name="game-create"),
     path('games/<int:pk>/update/', views.GameUpdateView.as_view(), name='game-update'),
-    path('games/<int:pk>/delete/', views.GameDeleteView.as_view(), name='game-delte'),
+    path('games/<int:pk>/delete/', views.GameDeleteView.as_view(), name='game-delete'),
+    path("games/search/", views.search_games, name="game_search"),
+    path("tournaments/search/", views.search_tournaments, name="tournament_search"),
+    path("tournaments/<int:pk>/update/", views.TournamentUpdateView.as_view(), name="tournament-update"),
+    path("tournaments/<int:pk>/delete/", views.TournamentDeleteView.as_view(), name="tournament-delete")
 ]

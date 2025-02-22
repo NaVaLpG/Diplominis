@@ -2,15 +2,49 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<a href="{% url 'tournament-create' %}">Create tournament</a>
+<a href="{% url 'tournament-create' %}"><button>Create a new tournament</button></a>
 {% endif %}
+
+<form
+    class="form-inline my-2 my-lg-0"
+    action="{% url 'tournament_search' %}"
+    method="get">
+    <input
+      class="form-control mr-sm-2"
+      type="search"
+      placeholder="Search tournament"
+      aria-label="Search"
+      name="search_text"
+    />
+        <button class="btn btn-outline-info my-2 my-sm-0" type="submit">
+            Search
+        </button>
+</form>
 <h2>Tournaments</h2>
 
-    {% for tournament in tournaments %}
-        <div class="container" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
-            <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px;">
-            <a href="{% url 'tournament-detail' tournament.id %}">{{ tournament.name }}</a>
+{% for tournament in tournaments %}
+
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center;">
+                <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px; margin-right: 10px;">
+                <a href="{% url 'tournament-detail' tournament.id %}">{{ tournament.name }}</a>
+            </div>
+            <div>
+                Start: {{ tournament.start_date }}
+            </div>
+            <div style="font-weight: bold;">
+                &#8593; {{ tournament.total_upvotes }}
+                {% if user.groups.first.name == "moderator" %}
+                <a href="{% url 'tournament-update' tournament.id %}">
+                    <button>update</button>
+                </a>
+                <a href="{% url 'tournament-delete' tournament.id %}">
+                    <button>delete</button>
+                </a>
+                {% endif %}
+            </div>
         </div>
-    {% endfor %}
+
+{% endfor %}
 
 {% endblock %}

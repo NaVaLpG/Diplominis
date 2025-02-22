@@ -1,5 +1,77 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<p>PGR PSL</p>
+<div class="container">
+    <div class="row w-100 justify-content-center">
+        <h3>Latest Tournaments</h3>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h4>Upcomming tournaments</h4>
+            {% for tournament in upcoming_tournaments %}
+                <a href="{% url 'tournament-detail' tournament.id %}">
+                    <p style="color: #faeaa5">{{ tournament }}</p>
+                </a>
+            {% endfor %}
+        </div>
+        <div class="col">
+            <h4>Ongoing tournaments</h4>
+            {% for tournament in ongoing_tournaments %}
+                <a href="{% url 'tournament-detail' tournament.id %}">
+                    <p style="color: #faeaa5">{{ tournament }}</p>
+                </a>
+            {% endfor %}
+        </div>
+        <div class="col">
+            <h4>Competed tournaments</h4>
+            {% for tournament in completed_tournaments %}
+                <a href="{% url 'tournament-detail' tournament.id %}">
+                    <p style="color: #faeaa5">{{ tournament }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% if user.is_authenticated %}
+        {% if favourite_games %}
+        <div class="row">
+            <div class="col">
+                <h4>Recommended tournaments based on the games you like</h4>
+            </div>
+        </div>
+        <div class="row">
+            {% for game in favourite_games %}
+            <div class="col"
+             style="display: flex; flex-direction: column; align-items: center; text-align: center;
+                    border: 2px solid #ddd; padding: 15px; border-radius: 10px; box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+                    background-color: #005a75; margin: 10px; max-width: 220px;">
+                <p>{{ game.game }}</p>
+                <p>
+                <img src="{{ game.game.game_picture.url }}" alt="game_pic" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;" class="rounded">
+                </p>
+                {% if game.game.tournament_set.first %}
+                    {% for tournament in game.game.tournament_set.all|dictsortreversed:"id"|slice:":5" %}
+                        <a href="{% url 'tournament-detail' tournament.id %}">
+                            <p style="color: #faeaa5">{{ tournament }}</p>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <p>there are currently no tournaments</p>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col">
+                <h4>Save games as favourites to see latest tournaments of the games you love!</h4>
+            </div>
+        </div>
+        {% endif %}
+
+    {% endif %}
+</div>
+
+
+
 {% endblock %}

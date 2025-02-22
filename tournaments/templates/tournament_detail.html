@@ -73,7 +73,7 @@
 {% endif %}
 <h4>Participants:</h4>
 
-{% for participant in tournament.tournamentparticipant_set.all %}
+{% for participant in participants %}
 <p>{{ participant.profile }} {{participant.ranking }}</p>
 {% endfor %}
 

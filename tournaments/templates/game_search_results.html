@@ -1,30 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-{% if user.groups.first.name == "moderator" %}
-<a href="{% url 'game-create' %}"><button>Add a new game</button> </a>
-{% endif %}
-<form
-    class="form-inline my-2 my-lg-0"
-    action="{% url 'game_search' %}"
-    method="get">
-    <input
-      class="form-control mr-sm-2"
-      type="search"
-      placeholder="Search game"
-      aria-label="Search"
-      name="search_text"
-    />
-        <button class="btn btn-outline-info my-2 my-sm-0" type="submit">
-            Search
-        </button>
-</form>
-<p></p>
-
+<a href="{% url 'game-all' %}">Back to all games</a>
+{% if games %}
+<h4>Results for <u>{{ query_text }}</u>:</h4>
 <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-    {% for game in game_list %}
-        <div style="text-align: center; width: 200px; background-color: #005a75; padding: 10px; border-radius: 8px;">
+    {% for game in games %}
+        <div style="text-align: center; width: 200px; background-color: #f8f9fa; padding: 10px; border-radius: 8px;">
             <a href="{% url 'game-one' game.id %}">
                 <img src="{{ game.game_picture.url }}" alt="{{ game.name }}" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;">
             </a>
@@ -37,5 +19,8 @@
         </div>
     {% endfor %}
 </div>
+{% else %}
+<h4>no result for <u>{{ query_text }}</u> found</h4>
+{% endif %}
 
 {% endblock %}

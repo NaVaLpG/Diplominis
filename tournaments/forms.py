@@ -27,6 +27,12 @@ class TournamentForm(forms.ModelForm):
         fields = ("name", "game", "start_date", "logo")
 
 
+class TournamentUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ("name", "game", "start_date", "logo")
+
+
 class TournamentRankingForm(forms.ModelForm):
     class Meta:
         model = TournamentParticipant
@@ -36,10 +42,10 @@ class TournamentRankingForm(forms.ModelForm):
 class GameForm(forms.ModelForm):
     class Meta:
         model = Game
-        fields = ("name", "description", "release_date")
+        fields = ("name", "description", "release_date", "game_picture")
 
 
 class GameUpdateForm(forms.ModelForm):
     class Meta:
         model = Game
-        fields = ("name", "description", "release_date")
+        fields = ("name", "description", "release_date", "game_picture")

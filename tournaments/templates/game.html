@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<img src="{{ game.game_picture.url }}" alt="GAme Picture" style="max-width: 200px;">
 <h1>{{ game.name }}</h1>
+
+<p>{{ game.description }}</p>
+
 {% if user.is_authenticated %}
     {% if is_favorite %}
         <a href="{% url 'remove-favorite-game' game.id %}">Remove from Favorites</a>

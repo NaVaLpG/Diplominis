@@ -14,12 +14,25 @@ import random
 
 from .forms import (UserUpdateForm, ProfleUpdateForm,
                     TournamentStatusUpdateForm, TournamentForm,
-                    TournamentRankingForm, GameForm, GameUpdateForm)
+                    TournamentRankingForm, GameForm,
+                    GameUpdateForm, TournamentUpdateForm)
 from .models import User, Profile, Game, Tournament, TournamentParticipant, FavouriteGame
 
 
 def index(request):
-    return render(request, 'index.html')
+    context = {"tournaments": Tournament.objects.all(),
+               "upcoming_tournaments": Tournament.objects.filter(status="u").order_by("-start_date").all()[:5],
+               "ongoing_tournaments": Tournament.objects.filter(status="o").order_by("-start_date").all()[:5],
+               "completed_tournaments": Tournament.objects.filter(status="c").order_by("-start_date").all()[:5],
+               }
+
+    if request.user.is_authenticated:
+        profile = get_object_or_404(Profile, user=request.user)
+        favorite_games = FavouriteGame.objects.filter(profile=profile).all()[:4]
+        context["favourite_games"] = favorite_games
+        print(favorite_games)
+
+    return render(request, 'index.html', context=context)
 
 
 @login_required()
@@ -121,6 +134,7 @@ class TournamentDetailView(generic.DetailView):
             ranking_forms = {participant: TournamentRankingForm(instance=participant) for participant in participants}
             context['ranking_forms'] = ranking_forms
             context['can_rank'] = True
+            context['participants'] = participants
 
         return context
 
@@ -180,6 +194,30 @@ class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
         return super().form_valid(form)
 
 
+class TournamentUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    model = Tournament
+    form_class = TournamentUpdateForm
+    template_name = "tournament_update.html"
+    success_url = "/tournaments/tournaments/"
+
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+    def test_func(self):
+        tournament = self.get_object()
+        return self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists()
+
+
+class TournamentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    model = Tournament
+    template_name = "tournament_delete.html"
+    success_url = "/tournaments/tournaments/"
+    context_object_name = "tournament"
+
+    def test_func(self):
+        return self.request.user.groups.filter(name="moderator").exists()
+
+
 class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
     model = Game
     form_class = GameForm
@@ -187,11 +225,11 @@ class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
     success_url = "/tournaments/games/"
 
     def form_valid(self, form):
-        form.instance.created_by = self.request.user
         return super().form_valid(form)
 
     def test_func(self):
-        return self.request.user.groups.filter(name="moderator").exists()
+        tournament = self.get_object()
+        return self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists()
 
 
 class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
@@ -201,7 +239,6 @@ class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
     success_url = "/tournaments/games/"
 
     def form_valid(self, form):
-        form.instance.created_by = self.request.user
         return super().form_valid(form)
 
     def test_func(self):
@@ -258,3 +295,27 @@ def upvote_tournament(request, tournament_id):
         tournament.upvotes.add(request.user)
 
     return redirect('tournament-detail', pk=tournament.id)
+
+
+def search_games(request):
+    query_text = request.GET.get('search_text')
+    search_results = Game.objects.filter(name__icontains=query_text)
+
+    context = {'query_text': query_text,
+               'games': search_results}
+
+    return render(request, 'game_search_results.html', context=context)
+
+
+def search_tournaments(request):
+    query_text = request.GET.get('search_text')
+    search_results = Tournament.objects.filter(
+        Q(name__icontains=query_text) |
+        Q(game__name__icontains=query_text) |
+        Q(created_by__username__icontains=query_text)
+    )
+
+    context = {'query_text': query_text,
+               'tournaments': search_results}
+
+    return render(request, 'tournament_search_results.html', context=context)

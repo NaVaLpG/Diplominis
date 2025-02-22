@@ -6,19 +6,17 @@
   {% csrf_token %}
   <table>
     <tr>
-      <td>Vartotojo vardas</td>
+      <td style="color: white">Vartotojo vardas</td>
       <td>{{ form.username }}</td>
     </tr>
     <tr>
-      <td>Slaptazodis</td>
+      <td style="color: white">Slaptazodis</td>
       <td>{{ form.password }}</td>
     </tr>
   </table>
   <input type="submit" value="Prisijungti">
   <input type="hidden" name="next" value="{{ next }}"/>
 </form>
-<p><a href="{% url 'password_reset' %}">Pamirsote slaptazodi?</a></p>
-<p></p>
 
 
 {% endblock %}

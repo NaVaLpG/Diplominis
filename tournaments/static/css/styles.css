@@ -1,19 +1,26 @@
 body {
-    background-color: #97add1;
+    background-color: #051530;
 
 .sidebar-nav {
   list-style: none;
   margin-top: 10px;
   }
 }
-.card {
-    min-height: 600px;
-    width: 100%;
+p {
+    color: #e6e6e6;
 }
-.card-body{
-    height: 25%;
+h1 {
+    color: #e6e6e6;
 }
-.card img{
-    height: 75%;
-    object-fit: contain;
+h2 {
+    color: #e6e6e6;
+}
+h3 {
+    color: #e6e6e6;
+}
+h4 {
+    color: #e6e6e6;
+}
+a {
+    color: #faeaa5;
 }
