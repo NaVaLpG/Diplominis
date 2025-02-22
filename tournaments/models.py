@@ -48,6 +48,7 @@ class Tournament(models.Model):
     start_date = models.DateField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     upvotes = models.ManyToManyField(User, related_name="tournament_upvotes", blank=True)
+    logo = models.ImageField(upload_to='tournament_logos/', default="tournament.png")
 
     def total_upvotes(self):
         return self.upvotes.count()
@@ -66,12 +67,10 @@ class Tournament(models.Model):
 class TournamentParticipant(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    ranking = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         unique_together = ('profile', 'tournament')
 
-
     def __str__(self):
         return f"{self.profile} - {self.tournament.name}"
-
-

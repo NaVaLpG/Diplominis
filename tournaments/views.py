@@ -1,5 +1,6 @@
 from lib2to3.fixes.fix_input import context
 
+import json
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.views import generic
 from django.db.models import Q
@@ -8,8 +9,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
+from django.utils.safestring import mark_safe
+import random
 
-from .forms import UserUpdateForm, ProfleUpdateForm, TournamentStatusUpdateForm
+from .forms import (UserUpdateForm, ProfleUpdateForm,
+                    TournamentStatusUpdateForm, TournamentForm,
+                    TournamentRankingForm, GameForm)
 from .models import User, Profile, Game, Tournament, TournamentParticipant, FavouriteGame
 
 
@@ -113,15 +118,37 @@ class TournamentDetailView(generic.DetailView):
             if self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists():
                 context['status_form'] = TournamentStatusUpdateForm(instance=tournament)
 
+            participants = tournament.tournamentparticipant_set.all().order_by('ranking')
+            ranking_forms = {participant: TournamentRankingForm(instance=participant) for participant in participants}
+            context['ranking_forms'] = ranking_forms
+            context['can_rank'] = True  # Allow ranking
+
         return context
 
     def post(self, request, *args, **kwargs):
-        """Handle the status update"""
         tournament = self.get_object()
 
-        form = TournamentStatusUpdateForm(request.POST, instance=tournament)
-        if form.is_valid():
-            form.save()
+        # Handle status update
+        if 'status_form' in request.POST:
+            form = TournamentStatusUpdateForm(request.POST, instance=tournament)
+            if form.is_valid():
+                form.save()
+            return redirect('tournament-detail', pk=tournament.pk)
+
+        if 'ranking_form' in request.POST:
+            if request.user == tournament.created_by or request.user.groups.filter(name="moderator").exists():
+                participant_ids = request.POST.getlist("participant_id")
+
+                for participant_id in participant_ids:
+                    participant = get_object_or_404(TournamentParticipant, id=participant_id)
+
+                    ranking_value = request.POST.get(f"ranking_{participant_id}")
+
+                    if ranking_value:
+                        participant.ranking = ranking_value
+                        participant.save()
+            return redirect('tournament-detail', pk=tournament.pk)
+
         return redirect('tournament-detail', pk=tournament.pk)
 
 
@@ -146,9 +173,20 @@ def leave_tournament(request, tournament_id):
 # Sukurti naują turnyrą (tik prisijungusiems vartotojams)
 class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
     model = Tournament
+    form_class = TournamentForm
     template_name = "tournament_form.html"
-    fields = ["name", "game", "start_date"]
     success_url = "/tournaments/tournaments/"
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+
+class GameCreateView(LoginRequiredMixin, generic.CreateView):
+    model = Game
+    form_class = GameForm
+    template_name = "game_form.html"
+    success_url = "/tournaments/games/"
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user

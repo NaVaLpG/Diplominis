@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Tournaments</h2>
-<ul>
-    {% for tournament in tournaments %}
-        <li><a href="{% url 'tournament-detail' tournament.id %}">{{ tournament.name }}</a></li>
-    {% endfor %}
-</ul>
+{% if user.is_authenticated %}
 <a href="{% url 'tournament-create' %}">Create tournament</a>
+{% endif %}
+<h2>Tournaments</h2>
+
+    {% for tournament in tournaments %}
+        <div class="container" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+            <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px;">
+            <a href="{% url 'tournament-detail' tournament.id %}">{{ tournament.name }}</a>
+        </div>
+    {% endfor %}
+
 {% endblock %}

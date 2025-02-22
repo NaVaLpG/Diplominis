@@ -113,6 +113,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_ROOT = Path(BASE_DIR) / 'media'
+MEDIA_URL = '/media/'
+
 LOGIN_REDIRECT_URL = '/tournaments/'
 LOGOUT_REDIRECT_URL = '/tournaments/'
 

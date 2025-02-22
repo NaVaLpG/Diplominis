@@ -2,56 +2,96 @@
 
 {% block content %}
 <h2>{{ tournament.name }}</h2>
+<img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 200px;">
 <p>Game: {{ tournament.game.name }}</p>
 <p>Created_by: {{ tournament.created_by }}</p>
 <p>Start: {{ tournament.start_date }}</p>
+
 
 {% if user.is_authenticated %}
     {% if user.groups.first.name == "moderator" or user == tournament.created_by %}
         <form method="post">
             {% csrf_token %}
             {{ status_form.as_p }}
-            <button type="submit" class="btn btn-primary">Update Status</button>
+                <button type="submit" name="status_form" value="update" class="btn btn-primary">Update Status</button>
         </form>
+    {% else %}
+    <p>{{ tournament.get_status_display }}</p>
     {% endif %}
 {% endif %}
 
 <a href="{% url 'tournament-list' %}">Back to tournament list</a>
 
-<p>Upvotes: {{ tournament.total_upvotes }}</p>
-
 {% if user.is_authenticated %}
-    <form action="{% url 'tournament-upvote' tournament.id %}" method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn {% if user in tournament.upvotes.all %}btn-primary{% else %}btn-secondary{% endif %}">
-            {% if user in tournament.upvotes.all %}&#8593;{% else %}&#8593;{% endif %}
-        </button>
-    </form>
+<form action="{% url 'tournament-upvote' tournament.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit"
+            class="btn {% if user in tournament.upvotes.all %}btn-primary{% else %}btn-secondary{% endif %}">
+        {% if user in tournament.upvotes.all %}
+        &#8593; {{ tournament.total_upvotes }}
+        {% else %}
+        &#8593; {{ tournament.total_upvotes }}
+        {% endif %}
+    </button>
+</form>
 {% else %}
-    <p><a href="{% url 'login' %}">Login</a> to upvote.</p>
+<p><a href="{% url 'login' %}">Login</a> to upvote.</p>
 {% endif %}
+<h3>Participants & Rankings</h3>
 
+{% if tournament.status == 'o' %}
+    {% if user.is_authenticated %}
+        {% if user.groups.first.name == "moderator" or user == tournament.created_by %}
+            {% if can_rank %}
+                <form method="post">
+                    {% csrf_token %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Ranking</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant, form in ranking_forms.items %}
+                                <tr>
+                                    <td>{{ participant.profile }}</td>
+                                    <td>
+                                        <input type="hidden" name="participant_id" value="{{ participant.id }}">
+                                        <input type="number" name="ranking_{{ participant.id }}" value="{{ participant.ranking }}">
+
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="submit" name="ranking_form" value="update" class="btn btn-primary">Save Rankings</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}
 <h4>Participants:</h4>
 
-{% for tournament_participant in tournament.tournamentparticipant_set.all %}
-    <p>{{ tournament_participant.profile }}</p>
+{% for participant in tournament.tournamentparticipant_set.all %}
+<p>{{ participant.profile }} {{participant.ranking }}</p>
 {% endfor %}
 
 
 {% if tournament.status == 'u' %}
-    {% if user.is_authenticated %}
-        {% if user_participates %}
-            <form action="{% url 'leave-tournament' tournament.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-warning">Leave Tournament</button>
-            </form>
-        {% else %}
-            <form action="{% url 'join-tournament' tournament.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-secondary">Join Tournament</button>
-            </form>
-        {% endif %}
-    {% endif %}
+{% if user.is_authenticated %}
+{% if user_participates %}
+<form action="{% url 'leave-tournament' tournament.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-warning">Leave Tournament</button>
+</form>
+{% else %}
+<form action="{% url 'join-tournament' tournament.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-secondary">Join Tournament</button>
+</form>
+{% endif %}
+{% endif %}
 {% endif %}
 
 
