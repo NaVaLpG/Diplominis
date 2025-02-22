@@ -16,4 +16,5 @@ urlpatterns = [
     path('game/<int:game_id>/add_favorite/', views.add_favorite_game, name='add-favorite-game'),
     path('game/<int:game_id>/remove_favorite/', views.remove_favorite_game, name='remove-favorite-game'),
     path("games/create/", views.GameCreateView.as_view(), name="game-create"),
+    path('games/<int:pk>/update/', views.GameUpdateView.as_view(), name='game-update'),
 ]

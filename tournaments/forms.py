@@ -37,3 +37,9 @@ class GameForm(forms.ModelForm):
     class Meta:
         model = Game
         fields = ("name", "description", "release_date")
+
+
+class GameUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Game
+        fields = ("name", "description", "release_date")

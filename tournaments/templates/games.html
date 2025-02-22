@@ -10,7 +10,9 @@
 {% for game in game_list %}
 <p>
 <a href="{% url 'game-one' game.id %}">{{ game.name }}</a>
+<a href="{% url 'game-update' game.id %}"><button>update</button></a>
 </p>
+
 {% endfor %}
 
 {% endblock %}
