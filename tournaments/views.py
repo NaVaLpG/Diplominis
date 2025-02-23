@@ -21,14 +21,15 @@ from .models import User, Profile, Game, Tournament, TournamentParticipant, Favo
 
 def index(request):
     context = {"tournaments": Tournament.objects.all(),
-               "upcoming_tournaments": Tournament.objects.filter(status="u").order_by("-start_date").all()[:5],
-               "ongoing_tournaments": Tournament.objects.filter(status="o").order_by("-start_date").all()[:5],
-               "completed_tournaments": Tournament.objects.filter(status="c").order_by("-start_date").all()[:5],
+               "upcoming_tournaments": Tournament.objects.filter(status="u").order_by("-id").all()[:5],
+               "ongoing_tournaments": Tournament.objects.filter(status="o").order_by("-id").all()[:5],
+               "completed_tournaments": Tournament.objects.filter(status="c").order_by("-id").all()[:5],
+               "latest_games": Game.objects.order_by("-id").all()[:4],
                }
 
     if request.user.is_authenticated:
         profile = get_object_or_404(Profile, user=request.user)
-        favorite_games = FavouriteGame.objects.filter(profile=profile).all()[:4]
+        favorite_games = FavouriteGame.objects.filter(profile=profile).order_by("?").all()[:4]
         context["favourite_games"] = favorite_games
         print(favorite_games)
 
@@ -130,10 +131,14 @@ class TournamentDetailView(generic.DetailView):
             if self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists():
                 context['status_form'] = TournamentStatusUpdateForm(instance=tournament)
 
+            top_participants = tournament.tournamentparticipant_set.all().order_by('ranking')[:3]
+            rest_participants = tournament.tournamentparticipant_set.all().order_by('ranking')[3:]
             participants = tournament.tournamentparticipant_set.all().order_by('ranking')
             ranking_forms = {participant: TournamentRankingForm(instance=participant) for participant in participants}
             context['ranking_forms'] = ranking_forms
             context['can_rank'] = True
+            context['top_participants'] = top_participants
+            context['rest_participants'] = rest_participants
             context['participants'] = participants
 
         return context
@@ -261,13 +266,7 @@ def add_favorite_game(request, game_id):
     game = get_object_or_404(Game, id=game_id)
     profile = get_object_or_404(Profile, user=request.user)
 
-    # Check if the game is already in favorites
     favorite, created = FavouriteGame.objects.get_or_create(profile=profile, game=game)
-
-    if created:
-        messages.success(request, f"{game.name} added to favorites!")
-    else:
-        messages.info(request, f"{game.name} is already in your favorites.")
 
     return redirect('game-one', pk=game_id)
 
@@ -278,9 +277,7 @@ def remove_favorite_game(request, game_id):
     game = get_object_or_404(Game, id=game_id)
     profile = get_object_or_404(Profile, user=request.user)
 
-    # Delete the favorite if it exists
     FavouriteGame.objects.filter(profile=profile, game=game).delete()
-    messages.success(request, f"{game.name} removed from favorites!")
 
     return redirect('game-one', pk=game_id)
 

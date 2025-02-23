@@ -27,7 +27,7 @@
         <div class="container" style="display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
             <div style="display: flex; align-items: center;">
                 <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px; margin-right: 10px;">
-                <a href="{% url 'tournament-detail' tournament.id %}">{{ tournament.name }}</a>
+                <a href="{% url 'tournament-detail' tournament.id %}"><button type="button" class="btn btn-secondary">{{ tournament.name }}</button></a>
             </div>
             <div>
                 Start: {{ tournament.start_date }}

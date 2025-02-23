@@ -8,9 +8,39 @@
 
 {% if user.is_authenticated %}
     {% if is_favorite %}
-        <a href="{% url 'remove-favorite-game' game.id %}">Remove from Favorites</a>
+        <a href="{% url 'remove-favorite-game' game.id %}"><button type="button" class="btn btn-info">Remove from Favorites</button></a>
     {% else %}
-        <a href="{% url 'add-favorite-game' game.id %}">Add to Favorites</a>
+<a href="{% url 'add-favorite-game' game.id %}"><button type="button" class="btn btn-info">Add to Favorites</button></a>
     {% endif %}
 {% endif %}
+
+{% if game.tournament_set.first %}
+    <h3>Tournaments for this game:</h3>
+    {% for tournament in  game.tournament_set.all %}
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; background-color: #78d3ff; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center;">
+                    <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px; margin-right: 10px;">
+                    <a href="{% url 'tournament-detail' tournament.id %}"><button type="button" class="btn btn-secondary">{{ tournament.name }}</button></a>
+                </div>
+                <div>
+                    Start: {{ tournament.start_date }}
+                </div>
+                <div style="font-weight: bold;">
+                    &#8593; {{ tournament.total_upvotes }}
+                    {% if user.groups.first.name == "moderator" %}
+                    <a href="{% url 'tournament-update' tournament.id %}">
+                        <button>update</button>
+                    </a>
+                    <a href="{% url 'tournament-delete' tournament.id %}">
+                        <button>delete</button>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+    {% endfor %}
+{% else %}
+<p>There are no tournaments for this game yet.</p> <a href="{% url 'tournament-create' %}">Create Tournament for this game!</a>
+{% endif %}
+
+
 {% endblock %}
