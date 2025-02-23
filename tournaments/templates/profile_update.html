@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card p-3 shadow" style="border-radius: 10px; background-color: #005a75; color: white; margin-bottom: 20px;">
+                <img class="rounded-circle" src="{{ user.profile.profile_picture.url }}" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;"/>
+                <h2>{{ user.username }}</h2>
+                <div>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ p_form | crispy }}
+                        <div>
+                            <input type="submit" class="btn btn-outline-success" value="Save changes" >
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

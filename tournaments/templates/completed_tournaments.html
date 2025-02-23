@@ -1,50 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if user.is_authenticated %}
-<a href="{% url 'tournament-create' %}"><button>Create a new tournament</button></a>
-{% endif %}
 
-<form
-    class="form-inline my-2 my-lg-0"
-    action="{% url 'tournament_search' %}"
-    method="get">
-    <input
-      class="form-control mr-sm-2"
-      type="search"
-      placeholder="Search tournament"
-      aria-label="Search"
-      name="search_text"
-    />
-        <button class="btn btn-outline-info my-2 my-sm-0" type="submit">
-            Search
-        </button>
-</form>
 <h2>Tournaments</h2>
 
-
 <p>
-    <a href="{% url 'upcomming-tournaments' %}"><button>Upcomming</button></a>
+    <a href="{% url 'tournament-list' %}"><button>All</button></a>
+    <a href="{% url 'upcomming-tournaments' %}"><button>Upcoming</button></a>
     <a href="{% url 'ongoing-tournaments' %}"><button>Ongoing</button></a>
-    <a href="{% url 'completed-tournaments' %}"><button>Completed</button></a>
 </p>
-
-<div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">back</a>
-        {% endif %}
-        <span class="current" style="color: white">
-            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
-<p></p>
 
 {% for tournament in tournaments %}
 

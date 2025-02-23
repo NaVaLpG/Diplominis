@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index_nm'),
     path('profile/', views.get_user_profile, name='user-profile'),
+    path('profile/update/', views.update_user_profile, name='user-profile-update'),
     path("register/", views.register_user, name="register"),
     path("games/", views.GameListView.as_view(), name="game-all"),
     path("games/<int:pk>", views.game_detail_view, name="game-one"),
@@ -21,5 +22,10 @@ urlpatterns = [
     path("games/search/", views.search_games, name="game_search"),
     path("tournaments/search/", views.search_tournaments, name="tournament_search"),
     path("tournaments/<int:pk>/update/", views.TournamentUpdateView.as_view(), name="tournament-update"),
-    path("tournaments/<int:pk>/delete/", views.TournamentDeleteView.as_view(), name="tournament-delete")
+    path("tournaments/<int:pk>/delete/", views.TournamentDeleteView.as_view(), name="tournament-delete"),
+    path("tournaments/upcomming/", views.get_upcoming_tournaments, name="upcomming-tournaments"),
+    path("tournaments/ongoing/", views.get_ongoing_tournaments, name="ongoing-tournaments"),
+    path("tournaments/completed/", views.get_completed_tournaments, name="completed-tournaments"),
+    path("books/comment/<int:pk>", views.TournamentCommentDeleteView.as_view(), name="comment-delete"),
+
 ]

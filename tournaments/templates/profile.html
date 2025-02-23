@@ -4,12 +4,53 @@
 
 {% block content %}
 {% load crispy_forms_tags %}
+
 <div>
     <img class="rounded-circle" src="{{ user.profile.profile_picture.url }}" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;"/>
+    <p><a href="{% url 'user-profile-update' %}">Change picture</a></p>
     <h2>{{ user.username }}</h2>
-    <p>{{ user.email }}</p>
+
 </div>
-{% for game in profile.favouritegame_set.all %}
-<p>{{ game.game }}</p>
+<h3>Your favourite games</h3>
+<div class="container">
+    <div class="row">
+        {% for game in profile.favouritegame_set.all %}
+            <div class="col"
+                 style="display: flex; flex-direction: column; align-items: center; text-align: center;
+                        border: 2px solid #ddd; padding: 15px; border-radius: 10px; box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+                        background-color: #005a75; margin: 10px; max-width: 220px;">
+                <p>{{ game.game }}</p>
+                <p>
+                <img src="{{ game.game.game_picture.url }}" alt="game_pic" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;" class="rounded">
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<h3>Tournaments that you participate in</h3>
+{% for tournament in tournaments %}
+<div class="container" style="display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center;">
+                <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px; margin-right: 10px;">
+                <a href="{% url 'tournament-detail' tournament.id %}"><button type="button" class="btn btn-secondary">{{ tournament.name }}</button></a>
+                {{ tournament.get_status_display }}
+            </div>
+            <div>
+                Start: {{ tournament.start_date }}
+            </div>
+            <div style="font-weight: bold;">
+
+                &#8593; {{ tournament.total_upvotes }}
+                {% if user.groups.first.name == "moderator" %}
+                <a href="{% url 'tournament-update' tournament.id %}">
+                    <button>update</button>
+                </a>
+                <a href="{% url 'tournament-delete' tournament.id %}">
+                    <button>delete</button>
+                </a>
+                {% endif %}
+            </div>
+        </div>
 {% endfor %}
 {% endblock %}

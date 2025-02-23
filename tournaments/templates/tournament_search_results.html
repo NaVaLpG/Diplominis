@@ -5,20 +5,27 @@
 {% if tournaments %}
 <h4>Results for <u>{{ query_text }}</u></h4>
 {% for tournament in tournaments %}
-    <a href="{% url 'tournament-detail' tournament.id %}">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
             <div style="display: flex; align-items: center;">
                 <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 30px; margin-right: 10px;">
-                {{ tournament.name }}
+                <a href="{% url 'tournament-detail' tournament.id %}"><button type="button" class="btn btn-secondary">{{ tournament.name }}</button></a>
+                {{ tournament.get_status_display }}
             </div>
             <div>
                 Start: {{ tournament.start_date }}
             </div>
             <div style="font-weight: bold;">
                 &#8593; {{ tournament.total_upvotes }}
+                {% if user.groups.first.name == "moderator" %}
+                <a href="{% url 'tournament-update' tournament.id %}">
+                    <button>update</button>
+                </a>
+                <a href="{% url 'tournament-delete' tournament.id %}">
+                    <button>delete</button>
+                </a>
+                {% endif %}
             </div>
         </div>
-    </a>
 {% endfor %}
 
 {% else %}

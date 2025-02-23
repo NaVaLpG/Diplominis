@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<form method="post">
+  {% csrf_token %}
+  <h4>Are you sure you want to delete this comment:</h4>
+  <p>Author: {{ comment.author }}</p>
+  <p>Comment: {{ comment.content }}</p>
+  <p>Date: {{ comment.date_created }}</p>
+
+  <div class="form-group">
+    <button class="btn btn-danger" type="submit">TAIP</button>
+    <a class="btn btn-info" href="{% url 'tournament-detail' comment.tournament.id %}">Atsaukti</a>
+  </div>
+</form>
+
+
+{% endblock %}

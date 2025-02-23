@@ -1,18 +1,12 @@
 from django import forms
 
-from .models import Profile, User, Tournament, TournamentParticipant, Game
+from .models import Profile, User, Tournament, TournamentParticipant, Game, TournamentComment
 
 
 class ProfleUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ("profile_picture",)
-
-
-class UserUpdateForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ("email",)
 
 
 class TournamentStatusUpdateForm(forms.ModelForm):
@@ -39,6 +33,16 @@ class TournamentRankingForm(forms.ModelForm):
         fields = ('ranking',)
 
 
+class TournamentCommentForm(forms.ModelForm):
+    class Meta:
+        model = TournamentComment
+        fields = ("content", "tournament", "author")
+        widgets = {
+            "tournament": forms.HiddenInput(),
+            "author": forms.HiddenInput()
+        }
+
+
 class GameForm(forms.ModelForm):
     class Meta:
         model = Game
@@ -49,3 +53,5 @@ class GameUpdateForm(forms.ModelForm):
     class Meta:
         model = Game
         fields = ("name", "description", "release_date", "game_picture")
+
+

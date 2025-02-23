@@ -135,4 +135,33 @@
         </div>
     </div>
 </div>
+{% if user.is_authenticated %}
+    <div class="mt-4">
+        <h4>Add a Comment</h4>
+        <form method="post">
+            {% csrf_token %}
+            {{ comment_form.as_p }}
+            <button type="submit" name="comment_form" value="submit" class="btn btn-primary">Post Comment</button>
+        </form>
+    </div>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> to post a comment.</p>
+{% endif %}
+
+<div class="mt-4">
+    <h4>Comments</h4>
+    <div class="p-3 rounded" style="background-color: #003d52; color: white;">
+        {% for comment in comments %}
+            <div class="mb-2 p-2 rounded shadow-sm" style="background-color: #005a75;">
+                <p><strong>{{ comment.author.profile }}</strong> - {{ comment.date_created }}</p>
+                <p>{{ comment.content }}</p>
+            </div>
+            {% if user.groups.first.name == "moderator" or user.profile == comment.author.profile %}
+            <a class="btn btn-danger bt-sm" href="{% url 'comment-delete' comment.id %}">Delete</a>
+                {% endif %}
+        {% empty %}
+            <p>No comments yet. Be the first to comment!</p>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

@@ -12,11 +12,11 @@ from django.contrib.auth.decorators import login_required
 from django.utils.safestring import mark_safe
 import random
 
-from .forms import (UserUpdateForm, ProfleUpdateForm,
+from .forms import (ProfleUpdateForm,
                     TournamentStatusUpdateForm, TournamentForm,
                     TournamentRankingForm, GameForm,
-                    GameUpdateForm, TournamentUpdateForm)
-from .models import User, Profile, Game, Tournament, TournamentParticipant, FavouriteGame
+                    GameUpdateForm, TournamentUpdateForm, TournamentCommentForm)
+from .models import User, Profile, Game, Tournament, TournamentParticipant, FavouriteGame, TournamentComment
 
 
 def index(request):
@@ -40,27 +40,32 @@ def index(request):
 @csrf_protect
 def get_user_profile(request):
     profile = get_object_or_404(Profile, user=request.user)
+    context = {
+        "profile": profile,
+        "tournaments": Tournament.objects.filter(tournamentparticipant__profile=profile).all()
+    }
+    return render(request, "profile.html", context=context)
+
+
+@login_required()
+@csrf_protect
+def update_user_profile(request):
+    profile = get_object_or_404(Profile, user=request.user)
     if request.method == "POST":
         p_form = ProfleUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        if p_form.is_valid() and u_form.is_valid():
+        if p_form.is_valid():
             p_form.save()
-            u_form.save()
-            messages.info(request, "Profilis atnaujintas")
-        else:
-            messages.error(request, "Profilis neatnaujinas. Ivyko klaida")
         return redirect("user-profile", )
 
     if request.method == "GET":
         p_form = ProfleUpdateForm(instance=request.user.profile)
-        u_form = UserUpdateForm(instance=request.user)
 
         context = {
             "p_form": p_form,
-            "u_form": u_form,
             "profile": profile,
+            "tournaments": Tournament.objects.filter(tournamentparticipant__profile=profile).all()
         }
-    return render(request, "profile.html", context=context)
+    return render(request, "profile_update.html", context=context)
 
 
 @csrf_protect
@@ -113,9 +118,27 @@ class TournamentListView(generic.ListView):
     model = Tournament
     template_name = "tournament_list.html"
     context_object_name = "tournaments"
+    paginate_by = 15
+
+    def get_queryset(self):
+        return Tournament.objects.order_by("-id")
 
 
-# Turnyro informacija
+def get_upcoming_tournaments(request):
+    tournaments = Tournament.objects.filter(status="u")
+    return render(request, "upcomming_tournaments.html", {"tournaments": tournaments})
+
+
+def get_ongoing_tournaments(request):
+    tournaments = Tournament.objects.filter(status="o")
+    return render(request, "ongoing_tournaments.html", {"tournaments": tournaments})
+
+
+def get_completed_tournaments(request):
+    tournaments = Tournament.objects.filter(status="c")
+    return render(request, "completed_tournaments.html", {"tournaments": tournaments})
+
+
 class TournamentDetailView(generic.DetailView):
     model = Tournament
     template_name = "tournament_detail.html"
@@ -141,9 +164,13 @@ class TournamentDetailView(generic.DetailView):
             context['rest_participants'] = rest_participants
             context['participants'] = participants
 
+        context['comments'] = tournament.tournamentcomment_set.all().order_by('-date_created')
+        context['comment_form'] = TournamentCommentForm()
+
         return context
 
     def post(self, request, *args, **kwargs):
+
         tournament = self.get_object()
 
         if 'status_form' in request.POST:
@@ -164,6 +191,15 @@ class TournamentDetailView(generic.DetailView):
                     if ranking_value:
                         participant.ranking = ranking_value
                         participant.save()
+            return redirect('tournament-detail', pk=tournament.pk)
+
+        if 'comment_form' in request.POST:
+            comment_form = TournamentCommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.tournament = tournament
+                comment.author = request.user
+                comment.save()
             return redirect('tournament-detail', pk=tournament.pk)
 
         return redirect('tournament-detail', pk=tournament.pk)
@@ -233,8 +269,7 @@ class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
         return super().form_valid(form)
 
     def test_func(self):
-        tournament = self.get_object()
-        return self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists()
+        return self.request.user.groups.filter(name="moderator").exists()
 
 
 class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
@@ -316,3 +351,23 @@ def search_tournaments(request):
                'tournaments': search_results}
 
     return render(request, 'tournament_search_results.html', context=context)
+
+
+class TournamentCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    model = TournamentComment
+    template_name = "delete_comment.html"
+    context_object_name = "comment"
+
+    def get_success_url(self):
+        comment_object = self.get_object()
+        return reverse("tournament-detail", kwargs={"pk": comment_object.tournament.id})
+
+    def test_func(self):
+        moderator = False
+        comment_object = self.get_object()
+        ifself = self.request.user == comment_object.author
+        for group in self.request.user.groups.all():
+            if group == "moderator":
+                moderator = True
+        if moderator or ifself:
+            return True

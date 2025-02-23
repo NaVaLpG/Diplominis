@@ -10,7 +10,7 @@
             <a href="{% url 'game-one' game.id %}">
                 <img src="{{ game.game_picture.url }}" alt="{{ game.name }}" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;">
             </a>
-            <p><strong>{{ game.name }}</strong></p>
+            <p style="color: black"><strong>{{ game.name }}</strong></p>
 
             {% if user.groups.first.name == "moderator" %}
                 <a href="{% url 'game-update' game.id %}"><button>Update</button></a>
