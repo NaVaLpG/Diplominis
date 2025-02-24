@@ -1,16 +1,10 @@
-from lib2to3.fixes.fix_input import context
-
-import json
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.views import generic
 from django.db.models import Q
-from django.core.paginator import Paginator
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
-from django.utils.safestring import mark_safe
-import random
 
 from .forms import (ProfleUpdateForm,
                     TournamentStatusUpdateForm, TournamentForm,
@@ -20,6 +14,7 @@ from .models import User, Profile, Game, Tournament, TournamentParticipant, Favo
 
 
 def index(request):
+    """Main menu context return"""
     context = {"tournaments": Tournament.objects.all(),
                "upcoming_tournaments": Tournament.objects.filter(status="u").order_by("-id").all()[:5],
                "ongoing_tournaments": Tournament.objects.filter(status="o").order_by("-id").all()[:5],
@@ -39,6 +34,7 @@ def index(request):
 @login_required()
 @csrf_protect
 def get_user_profile(request):
+    """User profile context return"""
     profile = get_object_or_404(Profile, user=request.user)
     context = {
         "profile": profile,
@@ -50,6 +46,7 @@ def get_user_profile(request):
 @login_required()
 @csrf_protect
 def update_user_profile(request):
+    """Allows user update his profile picture"""
     profile = get_object_or_404(Profile, user=request.user)
     if request.method == "POST":
         p_form = ProfleUpdateForm(request.POST, request.FILES, instance=request.user.profile)
@@ -70,6 +67,7 @@ def update_user_profile(request):
 
 @csrf_protect
 def register_user(request):
+    """Registers new user and creates profile for it"""
     if request.method == "GET":
         return render(request, "registration/registration.html")
     elif request.method == "POST":
@@ -92,18 +90,20 @@ def register_user(request):
             return redirect("register")
 
         User.objects.create_user(username=username, email=email, password=password)
-        messages.info(request, f"Vartotojas {username} sekmingai uzregistruotas!")
+        messages.info(request, f"User {username} registered!")
         return redirect("login")
 
 
 class GameListView(generic.ListView):
+    """returns all games context and paginates it by 10"""
     model = Game
     context_object_name = "game_list"
     template_name = "games.html"
-    paginate_by = 15
+    paginate_by = 10
 
 
 def game_detail_view(request, pk):
+    """Allows user or guest inspect games"""
     game = get_object_or_404(Game, id=pk)
     is_favorite = False
 
@@ -115,37 +115,46 @@ def game_detail_view(request, pk):
 
 
 class TournamentListView(generic.ListView):
+    """returns all tournaments and paginates tjem by 5"""
     model = Tournament
     template_name = "tournament_list.html"
     context_object_name = "tournaments"
-    paginate_by = 15
+    paginate_by = 5
 
     def get_queryset(self):
         return Tournament.objects.order_by("-id")
 
 
 def get_upcoming_tournaments(request):
+    """Gets all upcoming tournaments"""
     tournaments = Tournament.objects.filter(status="u")
     return render(request, "upcomming_tournaments.html", {"tournaments": tournaments})
 
 
 def get_ongoing_tournaments(request):
+    """Gets all ongoing tournaments"""
     tournaments = Tournament.objects.filter(status="o")
     return render(request, "ongoing_tournaments.html", {"tournaments": tournaments})
 
 
 def get_completed_tournaments(request):
+    """Gets all completed tournaments"""
     tournaments = Tournament.objects.filter(status="c")
     return render(request, "completed_tournaments.html", {"tournaments": tournaments})
 
 
 class TournamentDetailView(generic.DetailView):
+    """One tournaments detailed view"""
     model = Tournament
     template_name = "tournament_detail.html"
 
     def get_context_data(self, **kwargs):
+        """Gets data about tournament ranking and comments"""
         context = super().get_context_data(**kwargs)
         tournament = self.object
+        participants = tournament.tournamentparticipant_set.all().order_by('ranking')
+        top_participants = tournament.tournamentparticipant_set.all().order_by('ranking')[:3]
+        rest_participants = tournament.tournamentparticipant_set.all().order_by('ranking')[3:]
 
         if self.request.user.is_authenticated:
             user_participates = tournament.tournamentparticipant_set.filter(profile__user=self.request.user).exists()
@@ -153,24 +162,19 @@ class TournamentDetailView(generic.DetailView):
 
             if self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists():
                 context['status_form'] = TournamentStatusUpdateForm(instance=tournament)
-
-            top_participants = tournament.tournamentparticipant_set.all().order_by('ranking')[:3]
-            rest_participants = tournament.tournamentparticipant_set.all().order_by('ranking')[3:]
-            participants = tournament.tournamentparticipant_set.all().order_by('ranking')
             ranking_forms = {participant: TournamentRankingForm(instance=participant) for participant in participants}
             context['ranking_forms'] = ranking_forms
             context['can_rank'] = True
-            context['top_participants'] = top_participants
-            context['rest_participants'] = rest_participants
-            context['participants'] = participants
 
         context['comments'] = tournament.tournamentcomment_set.all().order_by('-date_created')
         context['comment_form'] = TournamentCommentForm()
+        context['participants'] = participants
+        context['top_participants'] = top_participants
+        context['rest_participants'] = rest_participants
 
         return context
 
     def post(self, request, *args, **kwargs):
-
         tournament = self.get_object()
 
         if 'status_form' in request.POST:
@@ -207,6 +211,7 @@ class TournamentDetailView(generic.DetailView):
 
 @login_required
 def join_tournament(request, tournament_id):
+    """Allows player join tournament"""
     tournament = Tournament.objects.get(id=tournament_id)
     profile = Profile.objects.get(user=request.user)
 
@@ -216,6 +221,7 @@ def join_tournament(request, tournament_id):
 
 @login_required
 def leave_tournament(request, tournament_id):
+    """Allows player leave tournament"""
     tournament = Tournament.objects.get(id=tournament_id)
     profile = Profile.objects.get(user=request.user)
 
@@ -225,6 +231,7 @@ def leave_tournament(request, tournament_id):
 
 # Sukurti naują turnyrą (tik prisijungusiems vartotojams)
 class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
+    """Allows loggedin user create a new tournament"""
     model = Tournament
     form_class = TournamentForm
     template_name = "tournament_form.html"
@@ -236,6 +243,7 @@ class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
 
 
 class TournamentUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    """Allows user who created or site moderator update tournaments info"""
     model = Tournament
     form_class = TournamentUpdateForm
     template_name = "tournament_update.html"
@@ -250,6 +258,7 @@ class TournamentUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.Upda
 
 
 class TournamentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    """Allows moderators delete tournament"""
     model = Tournament
     template_name = "tournament_delete.html"
     success_url = "/tournaments/tournaments/"
@@ -260,6 +269,7 @@ class TournamentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.Dele
 
 
 class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
+    """Allows moderators add a new game"""
     model = Game
     form_class = GameForm
     template_name = "game_form.html"
@@ -273,6 +283,7 @@ class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
 
 
 class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
+    """Allows moderators update games info"""
     model = Game
     form_class = GameUpdateForm
     template_name = "game_update.html"
@@ -286,6 +297,7 @@ class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
 
 
 class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    """Allows moderators delete game"""
     model = Game
     template_name = "game_delete.html"
     success_url = "/tournaments/games/"
@@ -297,11 +309,12 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView
 
 @login_required
 def add_favorite_game(request, game_id):
-    """Allows a user to add a game to their favorites"""
-    game = get_object_or_404(Game, id=game_id)
-    profile = get_object_or_404(Profile, user=request.user)
+    """Allows a user to add a game to their favorites."""
 
-    favorite, created = FavouriteGame.objects.get_or_create(profile=profile, game=game)
+    game = get_object_or_404(Game, id=game_id)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    FavouriteGame.objects.get_or_create(profile=profile, game=game)
 
     return redirect('game-one', pk=game_id)
 
@@ -319,6 +332,7 @@ def remove_favorite_game(request, game_id):
 
 @login_required
 def upvote_tournament(request, tournament_id):
+    """Allows user to upvote tournament"""
     tournament = get_object_or_404(Tournament, id=tournament_id)
 
     if request.user in tournament.upvotes.all():
@@ -330,6 +344,7 @@ def upvote_tournament(request, tournament_id):
 
 
 def search_games(request):
+    """Allows user to search for game"""
     query_text = request.GET.get('search_text')
     search_results = Game.objects.filter(name__icontains=query_text)
 
@@ -340,6 +355,7 @@ def search_games(request):
 
 
 def search_tournaments(request):
+    """Allows user to search turnament by game or name"""
     query_text = request.GET.get('search_text')
     search_results = Tournament.objects.filter(
         Q(name__icontains=query_text) |
@@ -354,6 +370,7 @@ def search_tournaments(request):
 
 
 class TournamentCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView):
+    """Allows moderators or creator to delete tournament"""
     model = TournamentComment
     template_name = "delete_comment.html"
     context_object_name = "comment"

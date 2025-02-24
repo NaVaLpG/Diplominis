@@ -6,7 +6,7 @@
 <div class="container">
     <div class="row">
         <div class="col">
-
+            <a href="{% url 'tournament-list' %}">Back to tournament list</a>
             <h2>{{ tournament.name }}</h2>
             <img src="{{ tournament.logo.url }}" alt="Tournament Logo" style="max-width: 200px;">
             <p>Game: {{ tournament.game.name }}</p>
@@ -27,8 +27,6 @@
                 {% endif %}
             {% endif %}
 
-            <a href="{% url 'tournament-list' %}">Back to tournament list</a>
-
             {% if user.is_authenticated %}
             <form action="{% url 'tournament-upvote' tournament.id %}" method="post">
                 {% csrf_token %}
@@ -41,8 +39,6 @@
                     {% endif %}
                 </button>
             </form>
-            {% else %}
-            <p><a href="{% url 'login' %}">Login</a> to upvote.</p>
             {% endif %}
 
             {% if tournament.status == 'o' %}
@@ -145,7 +141,7 @@
         </form>
     </div>
 {% else %}
-    <p><a href="{% url 'login' %}">Login</a> to post a comment.</p>
+    <p><a href="{% url 'login' %}">Login</a> to participate in this tournament!</p>
 {% endif %}
 
 <div class="mt-4">

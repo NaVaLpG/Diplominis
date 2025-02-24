@@ -5,6 +5,7 @@
 <h1>{{ game.name }}</h1>
 
 <p>{{ game.description }}</p>
+<p>Release date: {{ game.release_date }}</p>
 
 {% if user.is_authenticated %}
     {% if is_favorite %}

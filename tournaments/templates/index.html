@@ -71,7 +71,7 @@
                 <img src="{{ game.game.game_picture.url }}" alt="game_pic" style="width: 180px; height: 180px; object-fit: cover; border-radius: 5px;" class="rounded">
                 </p>
                 {% if game.game.tournament_set.first %}
-                    {% for tournament in game.game.tournament_set.all|dictsortreversed:"id"|slice:":5" %}
+                    {% for tournament in game.game.tournament_set.all|dictsortreversed:"id"|slice:":4" %}
                         <a href="{% url 'tournament-detail' tournament.id %}">
                             <p style="color: #faeaa5">{{ tournament }}</p>
                         </a>
@@ -107,7 +107,7 @@
                             style="width: 100%; height: 180px; object-fit: cover; border-radius: 5px;" class="rounded">
                     </div>
                     <div class="col-md-6">
-                        <p>{{ game.description }}</p>
+                        <p>{{ game.description|slice:":145" }}  <a href="{% url 'game-one' game.id %}"> read more...</a></p>
                     </div>
                 </div>
             </div>
