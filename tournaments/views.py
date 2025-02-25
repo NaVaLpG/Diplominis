@@ -49,6 +49,7 @@ def get_user_profile(request):
 def update_user_profile(request):
     """Allows user update his profile picture"""
     profile = get_object_or_404(Profile, user=request.user)
+    context = {"profile": profile}
     if request.method == "POST":
         p_form = ProfleUpdateForm(request.POST, request.FILES, instance=request.user.profile)
         if p_form.is_valid():
@@ -58,11 +59,10 @@ def update_user_profile(request):
     if request.method == "GET":
         p_form = ProfleUpdateForm(instance=request.user.profile)
 
-        context = {
+        context.update({
             "p_form": p_form,
-            "profile": profile,
             "tournaments": Tournament.objects.filter(tournamentparticipant__profile=profile).all()
-        }
+        })
     return render(request, "profile_update.html", context=context)
 
 
@@ -106,13 +106,11 @@ class GameListView(generic.ListView):
 def game_detail_view(request, pk):
     """Allows user or guest to inspect games"""
     game = get_object_or_404(Game, id=pk)
-    is_favorite = False
     context = {"game": game}
     game_tournaments = Tournament.objects.filter(game=game, status='c').all()
     duration_list = [tournament.duration for tournament in game_tournaments if tournament.duration is not None]
     avg_duration = sum(duration_list) / len(duration_list) if duration_list else "No tournaments for info yet"
-    context["avg_duration"] = avg_duration
-
+    context["avg_duration"] = round(avg_duration, 2)
 
     if request.user.is_authenticated:
         profile = get_object_or_404(Profile, user=request.user)
@@ -143,23 +141,24 @@ class TournamentListView(generic.ListView):
     paginate_by = 5
 
     def get_queryset(self):
+        """Retrieves all Tournament objects, ordered by ID in descending order."""
         return Tournament.objects.order_by("-id")
 
 
 def get_upcoming_tournaments(request):
-    """Gets all upcoming tournaments"""
+    """Retrieves all upcoming tournaments"""
     tournaments = Tournament.objects.filter(status="u")
     return render(request, "upcomming_tournaments.html", {"tournaments": tournaments})
 
 
 def get_ongoing_tournaments(request):
-    """Gets all ongoing tournaments"""
+    """Retrieves all ongoing tournaments"""
     tournaments = Tournament.objects.filter(status="o")
     return render(request, "ongoing_tournaments.html", {"tournaments": tournaments})
 
 
 def get_completed_tournaments(request):
-    """Gets all completed tournaments"""
+    """Retrieves all completed tournaments"""
     tournaments = Tournament.objects.filter(status="c")
     return render(request, "completed_tournaments.html", {"tournaments": tournaments})
 
@@ -196,6 +195,7 @@ class TournamentDetailView(generic.DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
+        """Handles POST requests for updating tournament status, rankings, and adding comments."""
         tournament = self.get_object()
 
         if 'status_form' in request.POST:
@@ -259,21 +259,24 @@ class TournamentCreateView(LoginRequiredMixin, generic.CreateView):
     success_url = "/tournaments/tournaments/"
 
     def form_valid(self, form):
+        """Checks for premission if user is creator of tournament"""
         form.instance.created_by = self.request.user
         return super().form_valid(form)
 
 
 class TournamentUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
-    """Allows user who created or site moderator update tournaments info"""
+    """Allows user who created or site moderator to update tournaments info"""
     model = Tournament
     form_class = TournamentUpdateForm
     template_name = "tournament_update.html"
     success_url = "/tournaments/tournaments/"
 
     def form_valid(self, form):
+        """Validates and processes the submitted form."""
         return super().form_valid(form)
 
     def test_func(self):
+        """Checks if the requesting user is authorized to update the tournament."""
         tournament = self.get_object()
         return self.request.user == tournament.created_by or self.request.user.groups.filter(name="moderator").exists()
 
@@ -286,6 +289,7 @@ class TournamentDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.Dele
     context_object_name = "tournament"
 
     def test_func(self):
+        """Checks if the requesting user is moderator"""
         return self.request.user.groups.filter(name="moderator").exists()
 
 
@@ -297,9 +301,11 @@ class GameCreateView(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView
     success_url = "/tournaments/games/"
 
     def form_valid(self, form):
+        """Validates and processes the submitted form."""
         return super().form_valid(form)
 
     def test_func(self):
+        """Checks if the requesting user is moderator"""
         return self.request.user.groups.filter(name="moderator").exists()
 
 
@@ -311,9 +317,11 @@ class GameUpdateView(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView
     success_url = "/tournaments/games/"
 
     def form_valid(self, form):
+        """Validates and processes the submitted form."""
         return super().form_valid(form)
 
     def test_func(self):
+        """Checks if the requesting user is moderator"""
         return self.request.user.groups.filter(name="moderator").exists()
 
 
@@ -325,6 +333,7 @@ class GameDeleteView(LoginRequiredMixin, UserPassesTestMixin, generic.DeleteView
     context_object_name = "game"
 
     def test_func(self):
+        """Checks if the requesting user is moderator"""
         return self.request.user.groups.filter(name="moderator").exists()
 
 
@@ -397,11 +406,12 @@ class TournamentCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, gener
     context_object_name = "comment"
 
     def get_success_url(self):
+        """Returns the URL to redirect to upon successful form submission."""
         comment_object = self.get_object()
         return reverse("tournament-detail", kwargs={"pk": comment_object.tournament.id})
 
     def test_func(self):
-        moderator = False
+        """Checks if the requesting user is authorized to delete the tournament."""
         comment_object = self.get_object()
         ifself = self.request.user == comment_object.author
         if self.request.user.groups.filter(name="moderator").exists() or ifself:

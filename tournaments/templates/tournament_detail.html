@@ -16,7 +16,7 @@
 
             {% if user.is_authenticated %}
                 {% if user.groups.first.name == "moderator" or user == tournament.created_by %}
-                    {% if tournament.status != 'c' %}
+                    {% if tournament.status != 'c' or user.groups.first.name == "moderator" %}
                     <a href="{% url 'tournament-update' tournament.id %}"><button>Update Tournament Info</button></a>
                     <form method="post">
                         {% csrf_token %}
