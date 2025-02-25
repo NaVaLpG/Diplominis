@@ -16,12 +16,14 @@
 
             {% if user.is_authenticated %}
                 {% if user.groups.first.name == "moderator" or user == tournament.created_by %}
-                        <a href="{% url 'tournament-update' tournament.id %}"><button>Update Tournament Info</button></a>
+                    {% if tournament.status != 'c' %}
+                    <a href="{% url 'tournament-update' tournament.id %}"><button>Update Tournament Info</button></a>
                     <form method="post">
                         {% csrf_token %}
                         {{ status_form.as_p }}
                             <button type="submit" name="status_form" value="update" class="btn btn-primary">Update Status</button>
                     </form>
+                    {% endif %}
                 {% else %}
                 <p>{{ tournament.get_status_display }}</p>
                 {% endif %}
@@ -102,6 +104,19 @@
 
             {% else %}
             <h3>Tournament results</h3>
+            <p>Tournament finished: {{ tournament.end_date }}</p>
+            <p>Tournament duration:
+                {% if tournament.duration == 0 %}
+                less than a day
+                {% elif tournament.duration == 1 %}
+                {{ tournament.duration }}
+                day
+                {% else %}
+                {{ tournament.duration }}
+                days
+                {% endif %}
+
+            </p>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover text-center" style="border-radius: 10px; overflow: hidden;">
                     <thead class="thead-dark">

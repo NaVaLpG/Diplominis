@@ -11,9 +11,18 @@
     {% if is_favorite %}
         <a href="{% url 'remove-favorite-game' game.id %}"><button type="button" class="btn btn-info">Remove from Favorites</button></a>
     {% else %}
-<a href="{% url 'add-favorite-game' game.id %}"><button type="button" class="btn btn-info">Add to Favorites</button></a>
+        <a href="{% url 'add-favorite-game' game.id %}"><button type="button" class="btn btn-info">Add to Favorites</button></a>
     {% endif %}
+    <h4>Create {{ game.name }} tournament</h4>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-success" type="submit">Create Tournament</button>
+    </form>
+
 {% endif %}
+
+<p>Average tournament duration: {{ avg_duration }} days</p>
 
 {% if game.tournament_set.first %}
     <h3>Tournaments for this game:</h3>
@@ -42,6 +51,5 @@
 {% else %}
 <p>There are no tournaments for this game yet.</p> <a href="{% url 'tournament-create' %}">Create Tournament for this game!</a>
 {% endif %}
-
 
 {% endblock %}

@@ -9,14 +9,15 @@ from django.contrib.auth.decorators import login_required
 from .forms import (ProfleUpdateForm,
                     TournamentStatusUpdateForm, TournamentForm,
                     TournamentRankingForm, GameForm,
-                    GameUpdateForm, TournamentUpdateForm, TournamentCommentForm)
+                    GameUpdateForm, TournamentUpdateForm,
+                    TournamentCommentForm, GameTournamentForm)
 from .models import User, Profile, Game, Tournament, TournamentParticipant, FavouriteGame, TournamentComment
 
 
 def index(request):
     """Main menu context return"""
     context = {"tournaments": Tournament.objects.all(),
-               "upcoming_tournaments": Tournament.objects.filter(status="u").order_by("-id").all()[:5],
+               "upcoming_tournaments": Tournament.objects.filter(status="u").order_by("id").all()[:5],
                "ongoing_tournaments": Tournament.objects.filter(status="o").order_by("-id").all()[:5],
                "completed_tournaments": Tournament.objects.filter(status="c").order_by("-id").all()[:5],
                "latest_games": Game.objects.order_by("-id").all()[:4],
@@ -103,15 +104,35 @@ class GameListView(generic.ListView):
 
 
 def game_detail_view(request, pk):
-    """Allows user or guest inspect games"""
+    """Allows user or guest to inspect games"""
     game = get_object_or_404(Game, id=pk)
     is_favorite = False
+    context = {"game": game}
+    game_tournaments = Tournament.objects.filter(game=game, status='c').all()
+    duration_list = [tournament.duration for tournament in game_tournaments if tournament.duration is not None]
+    avg_duration = sum(duration_list) / len(duration_list) if duration_list else "No tournaments for info yet"
+    context["avg_duration"] = avg_duration
+
 
     if request.user.is_authenticated:
         profile = get_object_or_404(Profile, user=request.user)
         is_favorite = FavouriteGame.objects.filter(profile=profile, game=game).exists()
+        context["is_favorite"] = is_favorite
 
-    return render(request, "game.html", {"game": game, "is_favorite": is_favorite})
+        if request.method == "POST":
+            form = GameTournamentForm(request.POST, request.FILES)  # Handle form data
+            if form.is_valid():
+                tournament = form.save(commit=False)  # Don't save yet
+                tournament.game = game  # Assign game manually
+                tournament.created_by = request.user  # Assign user manually
+                tournament.save()  # Now save it
+                return redirect("game-one", pk=pk)  # Redirect after success
+        else:
+            form = GameTournamentForm(initial={"game": game, "created_by": request.user})
+
+        context["form"] = form
+
+    return render(request, "game.html", context)
 
 
 class TournamentListView(generic.ListView):
@@ -383,8 +404,5 @@ class TournamentCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, gener
         moderator = False
         comment_object = self.get_object()
         ifself = self.request.user == comment_object.author
-        for group in self.request.user.groups.all():
-            if group == "moderator":
-                moderator = True
-        if moderator or ifself:
+        if self.request.user.groups.filter(name="moderator").exists() or ifself:
             return True

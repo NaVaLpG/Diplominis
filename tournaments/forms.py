@@ -55,3 +55,8 @@ class GameUpdateForm(forms.ModelForm):
         fields = ("name", "description", "release_date", "game_picture")
 
 
+class GameTournamentForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        fields = ("name", "start_date", "logo")
+        widgets = {"game": forms.HiddenInput()}

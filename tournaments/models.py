@@ -1,7 +1,7 @@
 from django.db import models
 from PIL import Image
 from django.contrib.auth.models import User
-
+from django.utils.timezone import now
 
 # Create your models here.
 
@@ -60,6 +60,19 @@ class Tournament(models.Model):
         ('c', 'Completed'),
     ]
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='u')
+    end_date = models.DateField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.status == 'c' and self.end_date is None:
+            self.end_date = now().date()
+        super().save(*args, **kwargs)
+
+    @property
+    def duration(self):
+        if self.status == 'c' and self.end_date:
+            return (self.end_date - self.start_date).days
+        return None
+
 
     def __str__(self):
         return self.name
