@@ -110,8 +110,7 @@ def game_detail_view(request, pk):
     game_tournaments = Tournament.objects.filter(game=game, status='c').all()
     duration_list = [tournament.duration for tournament in game_tournaments if tournament.duration is not None]
     avg_duration = sum(duration_list) / len(duration_list) if duration_list else "No tournaments for info yet"
-    context["avg_duration"] = round(avg_duration, 2)
-
+ 
     if request.user.is_authenticated:
         profile = get_object_or_404(Profile, user=request.user)
         is_favorite = FavouriteGame.objects.filter(profile=profile, game=game).exists()
